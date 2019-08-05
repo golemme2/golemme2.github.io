@@ -766,7 +766,6 @@ Plotly.newPlot('causesNASDelays', data2, layout2);
 
 <div id="Weather" class="mySlides">
   <p class="title">Weather</p>
-  <p>Weather's Share of Delay</p>
 
     <p>Extreme weather prevents flying. Within the NAS category, however, there is a subcategory of weather which slows the operations of the system but does not prevent flying. Delays or cancellations coded "NAS" are the type of weather delays that could be reduced with corrective action by the airports or the Federal Aviation Administration. During 2018, 55.0 percent of NAS delayed operations were due to weather, and NAS delays were 24.5 percent of total delays in that year. The following chart shows weather's share of both NAS delay time and total delay time. Hover over individual bars to see the exact percentages.</p>
     
@@ -805,7 +804,7 @@ var bars2 = {
 var data1 = [bars1, bars2];
     
 var layout = {
-  title: "Weather's Share of Total and NAS Delay Time (2004 - 2018)",
+  title: "Weather Share of Total and NAS Delay Time (2004 - 2018)",
   xaxis: {tickfont: {
       size: 14,
       color: 'rgb(107, 107, 107)'
@@ -863,7 +862,7 @@ var bars2 = {
 var data2 = [bars1, bars2];
 
 var layout = {
-  title: "Weather's Share of NAS Delay Time in 2018",
+  title: "Weather/Non-Weather Share of NAS Delay Time in 2018",
   xaxis: {tickfont: {
       size: 14,
       color: 'rgb(107, 107, 107)'
@@ -920,7 +919,7 @@ Plotly.newPlot('weatherDelayByMonthChart', data3, layout3);
 
 <div id="Other" class="mySlides">
   <p class="title">Other Factors</p>
-  <p>Is there any relationship between the flight length and delay? The below chart shows that the length of delays tend to slightly less if the flight is very long. Perhaps pilots are better able to "catch up" and get back on schedule if the flight is sufficiently long.</p>
+  <p>Is there any relationship between the flight length and delay? The below chart shows that the delay tends to be less if the flight is very long. Perhaps pilots are better able to "catch up" and get back on schedule if the flight is sufficiently long.</p>
   <div id="distanceChart"></div>
   <p></p>
   <p>Carriers that have at least 0.5 percent of total domestic scheduled-service passenger revenue report on-time data and the causes of delay. In 2019, there are 17 carriers reporting these numbers. There doesn't seem to be any relationship between the size or primary service area of the carier and it's on-time performance. Small carrier or large carrier, warm region or cold region -- such factors are poor predictors of performance. For example, Alaska Airlines and Hawain Airlines are two of the top-performers, even though they are associated with states that differ greatly with regard to region and weather.</p>
