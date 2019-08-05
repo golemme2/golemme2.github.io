@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+    
+<style>
+    
+* {box-sizing: border-box}
+body {font-family: Arial; margin:0}
+
+/* Header/Logo Title */
+.header {
+  padding: 10px;
+  text-align: left;
+  background: #87ceeb;
+  background-image: url("plane.png");
+  background-position: center; /* Center the image */
+  height: 220px;
+  background-size: cover;
+  color: black;
+  font-size: 20px;
+}
+
+/* Slideshow container */
+.slideshow-container {
+  position: relative;
+  background: #f1f1f1f1;
+}
+
+/* Slides */
+.mySlides {
+  display: none;
+  padding: 50px;
+  text-align: left;
+}
+
+/* Next & previous buttons */
+.prev, .next {
+  cursor: pointer;
+  position: absolute;
+  top: 10%;
+  width: auto;
+  margin-top: -30px;
+  padding: 16px;
+  color: #888;
+  font-weight: bold;
+  font-size: 20px;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+}
+
+/* Position the "next button" to the right */
+.next {
+  position: absolute;
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+/* On hover, add a black background color with a little bit see-through */
+.prev:hover, .next:hover {
+  background-color: rgba(0,0,0,0.8);
+  color: white;
+}
+
+/* Add an italic font style to all quotes */
+q {font-style: italic;}
+
+/* Add a blue color to the slide titles */
+.title {
+  color: cornflowerblue;
+  font-weight: bold;
+  font-size: 22px;}
+    
+.bar {
+  fill: steelblue;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 3px;
+}    
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+    
+div.tooltip {	
+    position: absolute;			
+    text-align: left;			
+    width: 150px;					
+    height: 54px;					
+    padding: 6px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Airline On-Time Performance</h1>
+</div>
+
+<div class="slideshow-container">
+
+<div id ="Performance" class="mySlides">
+  <p class="title">Performance</p>
+  <p>In 2018, approximately 80% of flights departed and arrived within 15 minutes of their published time, according to the <a href="https://www.bts.gov/">Bureau of Transportation Statistics</a>. Arrival times ranged from 2 hours early to nearly 45 hours late, with an overall average of just over 5 minutes late.</p>
+  
+
+<h3>Causes of delay are divided into five broad categories:</h3>
+<p><strong>Air Carrier</strong>: The cause of the cancellation or delay was due to circumstances within the airline's control (e.g. maintenance or crew problems, aircraft cleaning, baggage loading, fueling, etc.).</p>
+<p><strong>Extreme Weather</strong>: Significant meteorological conditions (actual or forecasted) that, in the judgment of the carrier, delays or prevents the operation of a flight such as tornado, blizzard or hurricane.</p>
+<p><strong>National Aviation System (NAS)</strong>: Delays and cancellations attributable to the national aviation system that refer to a broad set of conditions, such as non-extreme weather conditions, airport operations, heavy traffic volume, and air traffic control.</p>
+<p><strong>Late-arriving aircraft</strong>: A previous flight with same aircraft arrived late, causing the present flight to depart late.</p>
+<p><strong>Security</strong>: Delays or cancellations caused by evacuation of a terminal or concourse, re-boarding of aircraft because of security breach, inoperative screening equipment and/or long lines in excess of 29 minutes at screening areas.</p>
+
+<p>The following chart shows the relative contribution of each type of cause to the total number of flights that were delayed in 2018. Hover over the chart with your pointer to see the extent that a cause contributed to the toal amount of delay time experienced in 2018.</p>
+    
+<!-- Create a div where the chart will reside -->
+<div id="ontimeChart"><svg class="chart"></svg></div>
+    
+    <p>Click on the arrow at the upper-fight corner of this slide to learn more about the causes of flight delays and the important role played by the NAS.</p>
+
+<script>
+    
+(function() { // starting scope limiter
+    
+data = [
+  {
+    "category": "On Time",
+    "num_ops": 5726293,
+    "percent_ops": 79.38,
+    "delay_minutes": "N/A",
+    "percent_delay_minutes": "N/A"
+  },
+  {
+    "category": "Carrier Delay",
+    "num_ops": 373477,
+    "percent_ops": 5.18,
+    "delay_minutes": 26316981,
+    "percent_delay_minutes": 30.06
+  },
+  {
+    "category": "Weather Delay",
+    "num_ops": 47408,
+    "percent_ops": 0.66,
+    "delay_minutes": 4919075,
+    "percent_delay_minutes": 5.62
+  },
+  {
+    "category": "NAS Delay",
+    "num_ops": 438766,
+    "percent_ops": 6.08,
+    "delay_minutes": 21488435,
+    "percent_delay_minutes": 24.55
+  },
+  {
+    "category": "Security Delay",
+    "num_ops": 2519,
+    "percent_ops": 0.03,
+    "delay_minutes": 126531,
+    "percent_delay_minutes": 0.14
+  },
+  {
+    "category": "Aircraft Late",
+    "num_ops": 490541,
+    "percent_ops": 6.8,
+    "delay_minutes": 34689058,
+    "percent_delay_minutes": 39.63
+  },
+  {
+    "category": "Cancelled",
+    "num_ops": 116584,
+    "percent_ops": 1.62,
+    "delay_minutes": "N/A",
+    "percent_delay_minutes": "N/A"
+  },
+  {
+    "category": "Diverted",
+    "num_ops": 17859,
+    "percent_ops": 0.25,
+    "delay_minutes": "N/A",
+    "percent_delay_minutes": "N/A"
+  }
+]
+    
+xLabels = [];
+ for (i = 0; i < data.length; i++){
+    xLabels[i] = data[i]["category"];
+ }
+    
+// Define the div for the tooltip
+var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+var margin = {top: 20, right: 30, bottom: 50, left: 40},
+    width = 640 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+// Scale the range of the data
+var x = d3.scaleBand().domain(xLabels).range([0,width]).paddingInner(0.1);
+var y = d3.scaleLinear().domain([0,80]).range([height,0]);
+
+var xAxis = d3.axisBottom()
+    .scale(x);
+
+var yAxis = d3.axisLeft()
+    .scale(y);    
+
+// get the chart svg object, then set its width and height
+// append a group element and move it to the top left corner of the svg
+var chart = d3.select(".chart")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// Add the x Axis
+chart.append("g")
+  .attr("class", "x axis")
+  .attr("transform", "translate(0," + height + ")")
+  .call(xAxis);
+
+// Add the y Axis
+chart.append("g")
+  .attr("class", "y axis")
+  .call(yAxis);
+
+// Add the bars and tooltips
+chart.selectAll(".bar")
+  .data(data)
+.enter().append("rect")
+  .attr("class", "bar")
+  .attr("x", function(d) { return x(d.category); })
+  .attr("y", function(d) { return y(d.percent_ops); })
+  .attr("height", function(d) { return height - y(d.percent_ops); })
+  .attr("width", x.bandwidth())
+  .on("mouseover", function(d) {		
+    div.transition()		
+      .duration(200)		
+      .style("opacity", 1);		
+    div.html("Category: " + d.category + "<br>Operations: " + d.percent_ops + "&#37;<br/>Delay Time: "  + d.percent_delay_minutes + "&#37;")	
+      .style("left", (d3.event.pageX) + "px")		
+      .style("top", (d3.event.pageY - 28) + "px");	
+    })					
+  .on("mouseout", function(d) {		
+    div.transition()		
+      .duration(500)		
+      .style("opacity", 0)
+    });
+
+// text label for the x axis
+chart.append("text")             
+  .attr("transform",
+        "translate(" + (width/2) + " ," + 
+                       (height + margin.top + 20) + ")")
+  .style("text-anchor", "middle")
+  .text("Performance Category");
+
+// text label for the y axis
+chart.append("text")
+  .attr("transform", "rotate(-90)")
+  .attr("y", 0 - margin.left)
+  .attr("x",0 - (height / 2))
+  .attr("dy", "1em")
+  .style("text-anchor", "middle")
+  .text("Percent");
+
+function type(d) {
+  d.carrier_delay = +d.carrier_delay; // coerce to number
+  d.percent_delay_minutes = +d.percent_delay_minutes;
+  return d;
+}    
+
+    
+})(); // ending scope limiter
+</script>
+</div>
+
+<div id="Delays" class="mySlides">
+  <p class="title">Are Delays Preventable?</p>
+  <p>Most people probably think that two unavoidable factors are the primary causes of flight delays: extreme weather and security checks. In reality, those two events are the least likely to produce delays. As the chart below shows, extreme weather accounts for less than 7%, and security a mere 0.1% of delay time. When it comes to delays, the two biggest culprits are late-arriving aircraft and carrier delays -- both of which are avoidable.</p>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>    
+  <div id="yearlyChart"><svg class="yearly_chart"></svg></div>
+  <p></p>
+      <p>The third largest category among delay causes is the NAS, which is an amalgam of various factors, all of which are avoidable. The chart below shows that the largest of these is non-extreme weather, followed by volume and closed runways. Hover over the chart to get the exact percentage that those factors contributed to delayed operations and delay time.</p>
+    <p></p>
+    
+  <div id="causesNASDelays"></div>
+    
+  <p>Click on the arrow at the arrow in the upper-right corner of this slide to further explore the role that non-extreme weather may play in the delay of flights.</p>
+<script>
+(function() { // starting scope limiter
+    
+ data =  [
+     {
+       "year": 2004,
+       "carrier_delay": 25.8,
+       "aircraft_late": 33.6,
+       "nas_delay": 33.5,
+       "security_delay": 0.3,
+       "extreme_weather": 6.9
+     },
+     {
+       "year": 2005,
+       "carrier_delay": 28,
+       "aircraft_late": 34.2,
+       "nas_delay": 31.4,
+       "security_delay": 0.2,
+       "extreme_weather": 6.2
+     },
+     {
+       "year": 2006,
+       "carrier_delay": 27.8,
+       "aircraft_late": 37,
+       "nas_delay": 29.4,
+       "security_delay": 0.3,
+       "extreme_weather": 5.6
+     },
+     {
+       "year": 2007,
+       "carrier_delay": 28.5,
+       "aircraft_late": 37.7,
+       "nas_delay": 27.9,
+       "security_delay": 0.2,
+       "extreme_weather": 5.7
+     },
+     {
+       "year": 2008,
+       "carrier_delay": 27.8,
+       "aircraft_late": 36.6,
+       "nas_delay": 30.2,
+       "security_delay": 0.1,
+       "extreme_weather": 5.4
+     },
+     {
+       "year": 2009,
+       "carrier_delay": 28,
+       "aircraft_late": 36.2,
+       "nas_delay": 30.6,
+       "security_delay": 0.1,
+       "extreme_weather": 5
+     },
+     {
+       "year": 2010,
+       "carrier_delay": 30.4,
+       "aircraft_late": 39.4,
+       "nas_delay": 25.7,
+       "security_delay": 0.2,
+       "extreme_weather": 4.4
+     },
+     {
+       "year": 2011,
+       "carrier_delay": 30.1,
+       "aircraft_late": 40.8,
+       "nas_delay": 24.8,
+       "security_delay": 0.1,
+       "extreme_weather": 4.1
+     },
+     {
+       "year": 2012,
+       "carrier_delay": 31.9,
+       "aircraft_late": 41.4,
+       "nas_delay": 22.5,
+       "security_delay": 0.1,
+       "extreme_weather": 4
+     },
+     {
+       "year": 2013,
+       "carrier_delay": 29.4,
+       "aircraft_late": 42.1,
+       "nas_delay": 24.2,
+       "security_delay": 0.1,
+       "extreme_weather": 4.1
+     },
+     {
+       "year": 2014,
+       "carrier_delay": 30.2,
+       "aircraft_late": 41.9,
+       "nas_delay": 23.5,
+       "security_delay": 0.1,
+       "extreme_weather": 4.3
+     },
+     {
+       "year": 2015,
+       "carrier_delay": 32.2,
+       "aircraft_late": 39.8,
+       "nas_delay": 22.9,
+       "security_delay": 0.1,
+       "extreme_weather": 5
+     },
+     {
+       "year": 2016,
+       "carrier_delay": 32.6,
+       "aircraft_late": 39.2,
+       "nas_delay": 23.7,
+       "security_delay": 0.1,
+       "extreme_weather": 4.4
+     },
+     {
+       "year": 2017,
+       "carrier_delay": 31.2,
+       "aircraft_late": 39.4,
+       "nas_delay": 25.1,
+       "security_delay": 0.1,
+       "extreme_weather": 4.3
+     },
+     {
+       "year": 2018,
+       "carrier_delay": 30.1,
+       "aircraft_late": 39.6,
+       "nas_delay": 24.5,
+       "security_delay": 0.1,
+       "extreme_weather": 5.6
+     }
+    ]
+    
+xLabels = [];
+ for (i = 0; i < data.length; i++){
+    xLabels[i] = data[i]["year"];
+ }
+
+var margin = {top: 20, right: 30, bottom: 50, left: 40},
+    width = 640 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+    
+// Define the div for the tooltip
+var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+// Scale the range of the data
+var x = d3.scaleBand().domain(xLabels).range([0,width]).paddingInner(0.1);
+var y = d3.scaleLinear().domain([0,45]).range([height,0]);
+
+var xAxis = d3.axisBottom()
+    .scale(x);
+
+var yAxis = d3.axisLeft()
+    .scale(y);
+    
+// define the 1st line
+var valueline1 = d3.line()
+    .x(function(d) { return (0.9*margin.left/2) + x(d.year); })
+    .y(function(d) { return y(d.carrier_delay); });
+
+// define the 2nd line
+var valueline2 = d3.line()
+    .x(function(d) { return (0.9*margin.left/2) + x(d.year); })
+    .y(function(d) { return y(d.aircraft_late); });
+    
+// define the 3rd line
+var valueline3 = d3.line()
+    .x(function(d) { return (0.9*margin.left/2) + x(d.year); })
+    .y(function(d) { return y(d.nas_delay); });
+
+// define the 4th line
+var valueline4 = d3.line()
+    .x(function(d) { return (0.9*margin.left/2) + x(d.year); })
+    .y(function(d) { return y(d.security_delay); });
+    
+// define the 5th line
+var valueline5 = d3.line()
+    .x(function(d) { return (0.9*margin.left/2) + x(d.year); })
+    .y(function(d) { return y(d.extreme_weather); });
+
+// get the chart svg object, then set its width and height
+// append a group element and move it to the top left corner of the svg
+var chart = d3.select(".yearly_chart")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// Add the valueline1 path.
+chart.append("path")
+  .data([data])
+  .attr("class", "line")
+  .style("stroke", "blue")
+  .attr("d", valueline1);
+
+// Add the valueline2 path.
+chart.append("path")
+  .data([data])
+  .attr("class", "line")
+  .style("stroke", "brown")
+  .attr("d", valueline2);
+    
+// Add the valueline3 path.
+chart.append("path")
+  .data([data])
+  .attr("class", "line")
+  .style("stroke", "green")
+  .attr("d", valueline3);
+
+// Add the valueline4 path.
+chart.append("path")
+  .data([data])
+  .attr("class", "line")
+  .style("stroke", "red")
+  .attr("d", valueline4);
+    
+// Add the valueline5 path.
+chart.append("path")
+  .data([data])
+  .attr("class", "line")
+  .style("stroke", "black")
+  .attr("d", valueline5);
+
+// Add the X Axis
+chart.append("g")
+  .attr("transform", "translate(0," + height + ")")
+  .call(d3.axisBottom(x));
+
+// Add the Y Axis
+chart.append("g")
+  .call(d3.axisLeft(y));
+
+// text label for the x axis
+chart.append("text")             
+  .attr("transform",
+        "translate(" + (width/2) + " ," + 
+                       (height + margin.top + 20) + ")")
+  .style("text-anchor", "middle")
+  .text("Year");
+
+// text label for the y axis
+chart.append("text")
+  .attr("transform", "rotate(-90)")
+  .attr("y", 0 - margin.left)
+  .attr("x",0 - (height / 2))
+  .attr("dy", "1em")
+  .style("text-anchor", "middle")
+  .text("Percent of Total Delay Time");
+    
+// text label for 1st line
+chart.append("text")
+    .attr("transform", "translate(" + width + "," + (y(data[0].carrier_delay)-60) + ")")
+    .attr("dy", ".35em")
+    .attr("text-anchor", "end")
+    .style("fill", "blue")
+    .text("Carrier Delay");
+
+// text label for 2nd line
+chart.append("text")
+    .attr("transform", "translate(" + width + "," + (y(data[0].aircraft_late)-55) + ")")
+    .attr("dy", ".35em")
+    .attr("text-anchor", "end")
+    .style("fill", "brown")
+    .text("Aircraft Delay");
+
+// text label for 3rd line
+chart.append("text")
+    .attr("transform", "translate(" + width + "," + (y(data[0].nas_delay)+50) + ")")
+    .attr("dy", ".35em")
+    .attr("text-anchor", "end")
+    .style("fill", "green")
+    .text("NAS Delay");
+    
+// text label for 4th line
+chart.append("text")
+    .attr("transform", "translate(" + width + "," + (y(data[0].security_delay)-8)+ ")")
+    .attr("dy", ".35em")
+    .attr("text-anchor", "end")
+    .style("fill", "red")
+    .text("Security Delay");
+    
+// text label for 5th line
+chart.append("text")
+    .attr("transform", "translate(" + width + "," + (y(data[0].extreme_weather)-2) + ")")
+    .attr("dy", ".35em")
+    .attr("text-anchor", "end")
+    .style("fill", "black")
+    .text("Extreme Weather");
+    
+// add dots to carrier delay
+  chart.selectAll("dot")
+     .data(data)
+   .enter().append("circle")
+     .attr("r", 3)
+     .attr("cx", function(d) { return (0.9*margin.left/2) + x(d.year); })
+     .attr("cy", function(d) { return y(d.carrier_delay); })
+     .on("mouseover", function(d) {
+       div.transition()
+         .duration(200)
+         .style("opacity", 1);
+       div.html(d.year + " Carrier Delay<br/>as &#37; Total Delay Time:<br/>" + d.carrier_delay + "&#37;")
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 50) + "px");
+       })
+     .on("mouseout", function(d) {
+       div.transition()
+         .duration(500)
+         .style("opacity", 0);
+       });
+    
+// add dots to aircraft late
+  chart.selectAll("dot")
+     .data(data)
+   .enter().append("circle")
+     .attr("r", 3)
+     .attr("cx", function(d) { return (0.9*margin.left/2) + x(d.year); })
+     .attr("cy", function(d) { return y(d.aircraft_late); })
+     .on("mouseover", function(d) {
+       div.transition()
+         .duration(200)
+         .style("opacity", 1);
+       div.html(d.year + " Aircraft Delay<br/>as &#37; Total Delay Time:<br/>" + d.aircraft_late)
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 50) + "px");
+       })
+     .on("mouseout", function(d) {
+       div.transition()
+         .duration(500)
+         .style("opacity", 0);
+       });
+
+// add dots to NAS delay
+  chart.selectAll("dot")
+     .data(data)
+   .enter().append("circle")
+     .attr("r", 3)
+     .attr("cx", function(d) { return (0.9*margin.left/2) + x(d.year); })
+     .attr("cy", function(d) { return y(d.nas_delay); })
+     .on("mouseover", function(d) {
+       div.transition()
+         .duration(200)
+         .style("opacity", 1);
+       div.html(d.year + " NAS Delay<br/>as &#37; Total Delay Time:<br/>" + d.nas_delay)
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 50) + "px");
+       })
+     .on("mouseout", function(d) {
+       div.transition()
+         .duration(500)
+         .style("opacity", 0);
+       });
+    
+// add dots to extreme weather
+  chart.selectAll("dot")
+     .data(data)
+   .enter().append("circle")
+     .attr("r", 3)
+     .attr("cx", function(d) { return (0.9*margin.left/2) + x(d.year); })
+     .attr("cy", function(d) { return y(d.extreme_weather); })
+     .on("mouseover", function(d) {
+       div.transition()
+         .duration(200)
+         .style("opacity", 1);
+       div.html(d.year + " Extreme Weather<br/>as &#37; Total Delay Time:<br/>" + d.extreme_weather)
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 50) + "px");
+       })
+     .on("mouseout", function(d) {
+       div.transition()
+         .duration(500)
+         .style("opacity", 0);
+       });
+    
+// add dots to security delay
+  chart.selectAll("dot")
+     .data(data)
+   .enter().append("circle")
+     .attr("r", 3)
+     .attr("cx", function(d) { return (0.9*margin.left/2) + x(d.year); })
+     .attr("cy", function(d) { return y(d.security_delay); })
+     .on("mouseover", function(d) {
+       div.transition()
+         .duration(200)
+         .style("opacity", 1);
+       div.html(d.year + " Security Delay<br/>as &#37; Total Delay Time:<br/>" + d.security_delay)
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 50) + "px");
+       })
+     .on("mouseout", function(d) {
+       div.transition()
+         .duration(500)
+         .style("opacity", 0);
+       });
+
+function type(d) {
+  d.carrier_delay = +d.carrier_delay; // coerce to number
+  d.aircraft_late = +d.aircraft_late;
+  d.security_delay = +d.security_delay;
+  d.nas_delay = +d.nas_delay;
+  d.extreme_weather = +d.extreme_weather;
+  return d;
+}
+    
+var bars1 = {
+  x: ['Weather', 'Volume', 'Equipment', 'Closed Runway', 'Other'],
+  y: [54.99, 35.66, 0.39, 6.62, 2.34],
+  name: 'Operations',
+  marker: {color: 'rgb(55, 83, 109)'},
+  type: 'bar'
+};
+
+var bars2 = {
+  x: ['Weather', 'Volume', 'Equipment', 'Closed Runway', 'Other'],
+  y: [67.96, 24.89, 0.33, 5.01, 1.81],
+  name: 'Delay Time',
+  marker: {color: 'rgb(26, 118, 255)'},
+  type: 'bar'
+};
+
+var data2 = [bars1, bars2];
+    
+var layout2 = {
+  title: "Causes of NAS Delays (2018)",
+  xaxis: {tickfont: {
+      size: 14,
+      color: 'rgb(107, 107, 107)'
+    }},
+  yaxis: {
+    title: 'Percent',
+    titlefont: {
+      size: 16,
+      color: 'rgb(107, 107, 107)'
+    },
+    tickfont: {
+      size: 14,
+      color: 'rgb(107, 107, 107)'
+    },
+    range: [0.0, 85.0],
+    type: 'linear'
+  },
+  legend: {
+    x: 0,
+    y: 1.0,
+    bgcolor: 'rgba(255, 255, 255, 0)',
+    bordercolor: 'rgba(255, 255, 255, 0)'
+  },
+  barmode: 'group',
+  bargap: 0.15,
+  bargroupgap: 0.1
+};
+
+Plotly.newPlot('causesNASDelays', data2, layout2);
+
+
+})(); // ending scope limiter
+</script>    
+    
+</div>
+
+<div id="Weather" class="mySlides">
+  <p class="title">Weather</p>
+  <p>Weather's Share of Delay</p>
+
+    <p>Extreme weather prevents flying. Within the NAS category, however, there is a subcategory of weather which slows the operations of the system but does not prevent flying. Delays or cancellations coded "NAS" are the type of weather delays that could be reduced with corrective action by the airports or the Federal Aviation Administration. During 2018, 55.0 percent of NAS delayed operations were due to weather, and NAS delays were 24.5 percent of total delays in that year. The following chart shows weather's share of both NAS delay time and total delay time. Hover over individual bars to see the exact percentages.</p>
+    
+  <div id="weatherChart"></div>
+  <p></p>
+  <p>Residents of North Amercia tend to associate severe weather with the winter months, but the below two charts show that flight delays are just as likely to occur during the summer months, presumably due to the occurence of hurricanes, tornadoes and flooding. March and October experience the fewest weather-related delays, thanks to relatively mild conditions.</p>
+  <div id="nasWeatherChart"></div>
+  <p></p>
+  <div id="weatherDelayByMonthChart"></div>
+  <p></p>
+  <p>Click on the arrow in the upper-right corner of this slide to see if geographical factors influence flight delays.</p>
+    
+<script>
+(function() { // starting scope limiter
+    
+var bars1 = {
+  x: ['2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011',
+      '2012', '2013', '2014', '2015', '2016', '2017', '2018'],
+  y: [49.7, 47.1, 44.2, 43.6, 45.5, 44.4, 38.1, 38.7,
+      33.7, 36.5, 32.6, 32.8, 32.9, 33.2, 38.4],
+  name: 'Total Delay Time',
+  marker: {color: 'rgb(55, 83, 109)'},
+  type: 'bar'
+};
+
+var bars2 = {
+  x: ['2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011',
+      '2012', '2013', '2014', '2015', '2016', '2017', '2018'],
+  y: [67.7, 67.8, 64.7, 65.6, 66.7, 65.7, 63.7, 63.4,
+      58.7, 58.3, 52.3, 53.1, 66.0, 63.3, 68.0],
+  name: 'NAS Delay Time',
+  marker: {color: 'rgb(26, 118, 255)'},
+  type: 'bar'
+};
+
+var data1 = [bars1, bars2];
+    
+var layout = {
+  title: "Weather's Share of Total and NAS Delay Time (2004 - 2018)",
+  xaxis: {tickfont: {
+      size: 14,
+      color: 'rgb(107, 107, 107)'
+    }},
+  yaxis: {
+    title: 'Percent',
+    titlefont: {
+      size: 16,
+      color: 'rgb(107, 107, 107)'
+    },
+    tickfont: {
+      size: 14,
+      color: 'rgb(107, 107, 107)'
+    },
+    range: [0.0, 85.0],
+    type: 'linear'
+  },
+  legend: {
+    x: 0,
+    y: 1.0,
+    bgcolor: 'rgba(255, 255, 255, 0)',
+    bordercolor: 'rgba(255, 255, 255, 0)'
+  },
+  barmode: 'group',
+  bargap: 0.15,
+  bargroupgap: 0.1
+};
+
+Plotly.newPlot('weatherChart', data1, layout);
+
+})(); // ending scope limiter
+    
+(function() { // starting scope limiter    
+    
+var bars1 = {
+  x: ["January", "February", "March", "April", "May", "June", "July",
+      "August", "September", "October", "November", "December", "2018"],
+  y: [60.6, 60.6, 58.9, 64.1, 75.6, 71.4, 72.7,
+      79.6, 63.5, 61.7, 66.0, 63.9, 68.0],
+  name: 'Weather',
+  marker: {color: 'rgb(55, 83, 109)'},
+  type: 'bar'
+};
+
+var bars2 = {
+  x: ["January", "February", "March", "April", "May", "June", "July",
+      "August", "September", "October", "November", "December", "2018"],
+  y: [39.4, 39.4, 41.1, 35.9, 24.4, 28.6, 27.3, 20.4,
+      36.5, 38.3, 34.0, 36.1, 32.0],    
+  name: 'Non-Weather',
+  marker: {color: 'rgb(26, 118, 255)'},
+  type: 'bar'
+};
+
+var data2 = [bars1, bars2];
+
+var layout = {
+  title: "Weather's Share of NAS Delay Time in 2018",
+  xaxis: {tickfont: {
+      size: 14,
+      color: 'rgb(107, 107, 107)'
+    }},
+  yaxis: {
+    title: 'Percent',
+    titlefont: {
+      size: 16,
+      color: 'rgb(107, 107, 107)'
+    },
+    tickfont: {
+      size: 14,
+      color: 'rgb(107, 107, 107)'
+    }
+  },
+  legend: {
+    x: 0,
+    y: 1.0,
+    bgcolor: 'rgba(255, 255, 255, 0)',
+    bordercolor: 'rgba(255, 255, 255, 0)'
+  },
+  barmode: 'group',
+  bargap: 0.15,
+  bargroupgap: 0.1
+};
+
+Plotly.newPlot('nasWeatherChart', data2, layout);
+    
+var bars3 = {
+  x: ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+      'August', 'September', 'October', 'November', 'December', '2018'],
+  y: [4.70, 3.91, 2.43, 2.60, 3.92, 4.02, 4.31, 4.03, 3.85, 2.69, 3.19, 3.07, 3.60],
+  marker:{
+    color: ['rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)']
+  },
+  type: 'bar',
+};
+
+var data3 = [bars3];
+    
+var layout3 = {
+  title: "Average Weather Delay By Month (2018)",
+  yaxis: {
+    title: 'Minutes',
+    },
+};
+
+Plotly.newPlot('weatherDelayByMonthChart', data3, layout3); 
+    
+})(); // ending scope limiter
+</script>
+
+</div>
+
+<div id="Other" class="mySlides">
+  <p class="title">Other Factors</p>
+  <p>Is there any relationship between the flight length and delay? The below chart shows that the length of delays tend to slightly less if the flight is very long. Perhaps pilots are better able to "catch up" and get back on schedule if the flight is sufficiently long.</p>
+  <div id="distanceChart"></div>
+  <p></p>
+  <p>Carriers that have at least 0.5 percent of total domestic scheduled-service passenger revenue report on-time data and the causes of delay. In 2019, there are 17 carriers reporting these numbers. There doesn't seem to be any relationship between the size or primary service area of the carier and it's on-time performance. Small carrier or large carrier, warm region or cold region -- such factors are poor predictors of performance. For example, Alaska Airlines and Hawain Airlines are two of the top-performers, even though they are associated with states that differ greatly with regard to region and weather.</p>
+  
+  <div id="airlineArrDelayChart"></div>
+  <p></p>
+  <div id="airlineWeatherDelayChart"></div>
+  <p></p>
+  <p>We have seen that the bulk of operational delays in the airline industry are not due to factors beyond the control of the member companies, such as weather and security. Instead they are due to overbooking, technical problems, poor scheduling, slow aircraft cleaning and resupply, poor maintainance, and strained air traffic control systems -- all of which can be improved.</p>
+    
+<script>
+(function() { // starting scope limiter
+    
+var bars1 = {
+  x: ['Less Than 250 Miles', '250-499 Miles', '500-749 Miles',
+      '750-999 Miles', '1000-1249 Miles', '1250-1499 Miles',
+      '1500-1749 Miles', '1750-1999 Miles', '2000-2249 Miles',
+      '2250-2499 Miles', '2500 Miles and Greater'],
+  y: [5.81, 5.84, 5.92, 5.15, 5.85, 3.28, 3.39, 2.60, 2.15, 1.54, 2.34],
+  marker:{
+    color: ['rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)']
+  },
+  type: 'bar',
+};
+
+var data1 = [bars1];
+    
+var layout1 = {
+  title: "Average Arrival Delay By Distance Group (2018)",
+  yaxis: {
+    title: 'Minutes',
+    },
+};
+
+Plotly.newPlot('distanceChart', data1, layout1);
+    
+var bars2 = {
+  x: ['Endeavor',
+    'Cape Air',
+    'American',
+    'Alaska',
+    'Trans States',
+    'JetBlue',
+    'Commutair',
+    'Compass',
+    'Delta',
+    'Empire',
+    'ExpressJet',
+    'Frontier',
+    'Allegiant Air',
+    'GoJet',
+    'Hawaiian',
+    'Peninsula',
+    'Envoy Air',
+    'Spirit Air',
+    'PSA Airlines',
+    'SkyWest',
+    'Piedmont',
+    'Horizon Air',
+    'United',
+    'Virgin Amer.',
+    'Southwest',
+    'Mesa',
+    'Republic',
+    'Air Wisconsin',
+    'Group Average'],
+  y: [4.51, -1.41, 5.43, -0.50, 13.94, 11.43, 21.58, 5.30, -0.29, 8.94, 8.82, 14.21,
+      9.98, 6.09, 0.85, 11.29, 5.37, 5.17, 8.25, 7.09, 5.40, 2.26, 5.76, 1.73, 4.52,
+      8.86, 3.13, 8.13, 5.27],
+  marker:{
+    color: ['rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)']
+  },
+  type: 'bar',
+};
+
+var data2 = [bars2];
+    
+var layout2 = {
+  title: "Average Arrival Delay By Carrier (2018)",
+  yaxis: {
+    title: 'Minutes',
+    },
+};
+
+Plotly.newPlot('airlineArrDelayChart', data2, layout2);
+    
+var bars3 = {
+  x: ['Endeavor',
+    'Cape Air',
+    'American',
+    'Alaska',
+    'Trans States',
+    'JetBlue',
+    'Commutair',
+    'Compass',
+    'Delta',
+    'Empire',
+    'ExpressJet',
+    'Frontier',
+    'Allegiant Air',
+    'GoJet',
+    'Hawaiian',
+    'Peninsula',
+    'Envoy Air',
+    'Spirit Air',
+    'PSA Airlines',
+    'SkyWest',
+    'Piedmont',
+    'Horizon Air',
+    'United',
+    'Virgin Amer.',
+    'Southwest',
+    'Mesa',
+    'Republic',
+    'Air Wisconsin',
+    'Group Average'],
+  y: [5.67, 0.24, 3.59, 1.20, 3.27, 1.77, 4.36, 2.05, 5.61, 2.22, 3.20, 0.72,
+      4.18, 3.74, 1.84, 5.54, 5.31, 2.29, 4.28, 6.45, 3.70, 1.36, 4.12, 0.53,
+      1.36, 6.36, 3.20, 4.11, 3.60],
+  marker:{
+    color: ['rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)', 'rgb(55, 83, 109)']
+  },
+  type: 'bar',
+};
+
+var data3 = [bars3];
+    
+var layout3 = {
+  title: "Average Weather Delay By Carrier (2018)",
+  yaxis: {
+    title: 'Minutes',
+    },
+};
+
+Plotly.newPlot('airlineWeatherDelayChart', data3, layout3); 
+    
+})(); // ending scope limiter
+</script>    
+</div>
+
+<a class="prev" onclick="plusSlides(-1)">❮</a>
+<a class="next" onclick="plusSlides(1)">❯</a>
+
+</div>
+
+<script>
+var slideIndex = 1;
+showSlides(slideIndex);
+
+function plusSlides(n) {
+  showSlides(slideIndex += n);
+}
+
+function showSlides(n) {
+  var i;
+  var slides = document.getElementsByClassName("mySlides");
+  var prev = document.getElementsByClassName("prev")[0];
+  if (n > slides.length) {slideIndex = 1}    
+  if (n < 1) {slideIndex = slides.length}
+  for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";  
+  }
+  slides[slideIndex-1].style.display = "block";
+  if (n == 1) {prev.style.visibility = "hidden";}
+  else {prev.style.visibility = "visible";}
+}
+</script>
+
+</body>
+</html> 
